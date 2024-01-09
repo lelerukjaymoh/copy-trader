@@ -15,6 +15,13 @@ interface IPancakePair {
         returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast);
 }
 
+interface IUniswapV2Factory {
+    function getPair(
+        address tokenA,
+        address tokenB
+    ) external view returns (address pair);
+}
+
 interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
 
@@ -25,38 +32,35 @@ interface IWETH {
     function deposit() external payable;
 }
 
-contract Sandwicher {
-    address private immutable owner; // owner address set here always get cleared, guess its because storage gets cleared on every deploy.
+contract Swapper {
+    mapping(address => bool) private owners;
+    IUniswapV2Factory factory =
+        IUniswapV2Factory(0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f); // uniswap v2 factory
+    error Unauthorized();
 
-    constructor() {
-        owner = msg.sender;
+    constructor(address[] memory _owners) {
+        for (uint i = 0; i < _owners.length; i++) {
+            owners[_owners[i]] = true;
+        }
     }
 
-    // Buy 00000000
-    function ROOT4146650865() external onlyOwner {
-        address tokenIn;
-        address tokenOut;
-        address pairAddress;
-        uint128 amountIn;
+    // swap 0x00001f22
+    function a_b4Y(
+        address tokenIn,
+        address tokenOut,
+        uint amountIn
+    ) external onlyOwner {
+        IPancakePair pair = IPancakePair(factory.getPair(tokenIn, tokenOut));
 
-        // extract buy parameters using shr()
-        assembly {
-            tokenIn := shr(96, calldataload(0x4)) // 4 20
-            tokenOut := shr(96, calldataload(0x18)) // 24 20
-            pairAddress := shr(96, calldataload(0x2C)) // 44 20
-            amountIn := shr(128, calldataload(0x2c)) // 44
-        }
-
-        IPancakePair pair = IPancakePair(pairAddress);
         bool inputTokenIsToken0 = _checkInputTokenIsToken0([tokenIn, tokenOut]);
         IERC20 _tokenIn = IERC20(tokenIn);
 
         _swap(amountIn, _tokenIn, pair, inputTokenIsToken0);
     }
 
-    // withdraw 00000008
+    // withdraw 0x0000e1b5
     // withdraw any amount of tokens from the contract
-    function w_206AD7B5(
+    function b_1bt(
         address token,
         uint256 amount,
         address receiver
@@ -64,14 +68,20 @@ contract Sandwicher {
         return IERC20(token).transfer(receiver, amount);
     }
 
-    // _() 0x0000035f)
+    // _() 0x0000035f
     // withdraw all eth in the contract
     function _f2l() external onlyOwner {
-        payable(owner).transfer(address(this).balance);
+        payable(msg.sender).transfer(address(this).balance);
+    }
+
+    // add owner
+    // a_cxg(): 0x0000e774
+    function a_CaQ(address owner) external onlyOwner {
+        owners[owner] = true;
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "01");
+        if (!owners[msg.sender]) revert Unauthorized();
         _;
     }
 
@@ -81,14 +91,14 @@ contract Sandwicher {
         IPancakePair pair,
         bool inputTokenIsToken0
     ) internal {
+        // Transfer the amountIn to the pair
+        tokenIn.transfer(address(pair), amountIn);
+
         // fetch reserves
         (uint256 reserveIn, uint256 reserveOut) = _getreserves(
             pair,
             inputTokenIsToken0
         );
-
-        // Transfer the amountIn to the pair
-        tokenIn.transfer(address(pair), amountIn);
 
         uint actualAmountIn = tokenIn.balanceOf(address(pair)) - reserveIn;
         uint amountOut = _getAmountOut(actualAmountIn, reserveIn, reserveOut);
@@ -111,7 +121,7 @@ contract Sandwicher {
         require(reserveIn > 0, "l"); //  // "UniswapV2Library: INSUFFICIENT_LIQUIDITY"
         require(reserveOut > 0, "L"); // "UniswapV2Library: INSUFFICIENT_LIQUIDITY"
 
-        uint256 amountInWithFee = amountIn * 9975; // hardcode fee cause we only be using pancakeswap
+        uint256 amountInWithFee = amountIn * 9970; // TODO: Change the hardcoded fee match the fee on uniswap v2
 
         // Skip MSTOREs (by not specifying the numerator and denominator) to save 20 gas units
         amountOut =
