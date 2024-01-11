@@ -3,6 +3,8 @@ import { router } from "./src/swap/router";
 import { provider } from "./src/utils/fetchContractData";
 import { telegramBot } from "./src/telegram/bot";
 import { Messages } from "./src/telegram/messages";
+import { dpOps } from "./src/db/operations";
+import { parseEther } from "ethers";
 
 const main = async () => {
     const messages = new Messages()
@@ -21,7 +23,6 @@ const main = async () => {
             if (from && !wallets.hasOwnProperty(from.toLowerCase())) return;
 
             const methodId = data.slice(0, 10).toLowerCase();
-            const buyAmount = wallets[from.toLowerCase()]
 
             console.log("methodId: ", methodId);
 
@@ -45,11 +46,16 @@ const main = async () => {
                     )
                 }
 
+                const buyAmount = parseEther(wallets[from.toLowerCase()].toString());
+
                 const txnReceipt = await router.buy(tokenOut, buyAmount);
 
                 console.log("Transaction Receipt: ", txnReceipt);
 
                 if (txnReceipt && txnReceipt.status! == 1) {
+
+                    await dpOps.saveTrade(tokenOut, buyAmount, txnReceipt.hash, from)
+
                     await telegramBot.sendNotification(
                         TG_ID,
                         messages.successfulCopyTransactionMessage("Buy", from, tokenOut, txnReceipt.hash)

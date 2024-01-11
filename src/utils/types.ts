@@ -8,3 +8,10 @@ export interface TGRequestInputError {
     error: boolean,
     reason: string
 }
+
+export interface ITrade {
+    token: string,
+    amount: bigint,
+    txHash: string,
+    target: string,
+}

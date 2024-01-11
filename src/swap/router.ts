@@ -17,12 +17,11 @@ class Router extends Account {
         this.messages = new Messages();
     }
 
-    buy = async (tokenAddress: string, amount: bigint) => {
+    buy = async (tokenAddress: string, buyAmount: bigint) => {
         try {
             // Get all required data before swap 
             const path = [WETH, tokenAddress];
             const deadline = Math.floor(Date.now() / 1000) + 60 * 2;
-            const buyAmount = parseEther(amount.toString());
 
             console.log("buyAmount: ", buyAmount);
             console.log("weth ", WETH);
