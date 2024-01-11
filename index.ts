@@ -1,9 +1,13 @@
-import { wallets } from "./src/constants";
-import { provider } from "./src/utils";
+import { TG_ID, WETH, wallets } from "./src/utils/constants";
+import { router } from "./src/swap/router";
+import { provider } from "./src/utils/fetchContractData";
+import { telegramBot } from "./src/telegram/bot";
+import { Messages } from "./src/telegram/messages";
 
 const main = async () => {
+    const messages = new Messages()
     try {
-        const hash = "0xf5b18590364560657e48453d77be49ceb6a2ad411b120667b025ac04152f8bbb"
+        const hash = "0xb7af15a2ef3ecbc30627cb68fa4d0ff084eb34185801a32b44ddf49a9b059bcc"
 
         console.log("wallets to follow: ", wallets)
 
@@ -17,10 +21,13 @@ const main = async () => {
             if (from && !wallets.hasOwnProperty(from.toLowerCase())) return;
 
             const methodId = data.slice(0, 10).toLowerCase();
+            const buyAmount = wallets[from.toLowerCase()]
+
+            console.log("methodId: ", methodId);
 
             // Get the trade direction and token
             if (methodId == "0x0162e2d0") {
-                console.log("BUY TRADE: ", hash, txData);
+                console.log("BUY TRADE: ");
 
                 const tokenOutWithZeros = data.substring(data.length - 64);
                 const tokenInWithZeros = data.substring(
@@ -30,11 +37,27 @@ const main = async () => {
                 const tokenIn = "0x" + tokenInWithZeros.slice(24);
                 const tokenOut = "0x" + tokenOutWithZeros.slice(24);
 
-                console.log("tokenIn: ", tokenIn);
-                console.log("tokenOut: ", tokenOut);
+                // If target is buying with unsupported token, eg USDT, USDC, DAI, etc
+                if (tokenIn.toLowerCase() != WETH.toLowerCase()) {
+                    return await telegramBot.sendNotification(
+                        TG_ID,
+                        messages.targetBuyingWithUnsupportedToken(from, tokenOut, hash)
+                    )
+                }
+
+                const txnReceipt = await router.buy(tokenOut, buyAmount);
+
+                console.log("Transaction Receipt: ", txnReceipt);
+
+                if (txnReceipt && txnReceipt.status! == 1) {
+                    await telegramBot.sendNotification(
+                        TG_ID,
+                        messages.successfulCopyTransactionMessage("Buy", from, tokenOut, txnReceipt.hash)
+                    )
+                }
 
             } else if (methodId == "0x75713a08") {
-                console.log("SELL TRADE: ", hash, txData);
+                console.log("SELL TRADE");
 
                 const tokenInWithZeros = data.slice(10, 74);
                 const tokenOutWithZeros = data.slice(74, 138);
@@ -44,6 +67,17 @@ const main = async () => {
 
                 console.log("tokenIn: ", tokenIn);
                 console.log("tokenOut: ", tokenOut);
+
+                const txnReceipt = await router.sell(tokenOut, 100n);
+
+                console.log("Transaction Receipt: ", txnReceipt);
+
+                if (txnReceipt && txnReceipt.status! == 1) {
+                    await telegramBot.sendNotification(
+                        TG_ID,
+                        messages.successfulCopyTransactionMessage("Sell", from, tokenOut, txnReceipt.hash)
+                    )
+                }
             }
         }
         // });

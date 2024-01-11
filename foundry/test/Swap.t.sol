@@ -2,7 +2,7 @@
 pragma solidity >=0.8.19;
 
 import "forge-std/Test.sol";
-import {Swapper, IERC20} from "@swapper/Swap.sol";
+import {Swapper, IERC20} from "@src/Swap.sol";
 
 contract TestSwapper is Test {
     // test setup
