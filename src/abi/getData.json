@@ -1,0 +1,66 @@
+[
+    {
+        "type": "function",
+        "name": "getData",
+        "inputs": [
+            {
+                "name": "account",
+                "type": "address",
+                "internalType": "address"
+            },
+            {
+                "name": "tokenIn",
+                "type": "address",
+                "internalType": "address"
+            },
+            {
+                "name": "tokenOut",
+                "type": "address",
+                "internalType": "address"
+            },
+            {
+                "name": "amountIn",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "dataResult",
+                "type": "tuple",
+                "internalType": "struct Idata.DataResult",
+                "components": [
+                    {
+                        "name": "accountBalance",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "tokenDecimals",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "estimantedTokenOut",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    }
+                ]
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "myTest",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "stateMutability": "pure"
+    }
+]
