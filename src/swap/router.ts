@@ -1,4 +1,4 @@
-import { Contract, ethers, parseEther, parseUnits } from "ethers";
+import { Contract, MaxInt256, ethers, parseEther, parseUnits } from "ethers";
 
 import { TG_ID, UNISWAP_V2_ROUTER_ADDRESS, WETH, config } from "../utils/constants";
 import { Account } from "../utils/account";
@@ -30,10 +30,12 @@ class Router extends Account {
 
             const amounts = await helper.amountOutMin(buyAmount, path);
 
+            if (!amounts) return;
+
             const amountOutMin = amounts! * (100n - config.slippage) / 100n;
 
             console.log("Amount out min ", amountOutMin);
-            const transactionResponse: ethers.TransactionResponse = await this.uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens.staticCall(
+            const transactionResponse: ethers.TransactionResponse = await this.uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens(
                 amountOutMin,
                 path,
                 this.accountAddress,
@@ -50,19 +52,28 @@ class Router extends Account {
         }
     }
 
-    sell = async (token: string, percentageSell: bigint) => {
+    sell = async (tokenAddress: string, percentageSell: bigint) => {
         try {
+            // Check allowance
+            const allowance = await helper.tokenAllowance(tokenAddress, UNISWAP_V2_ROUTER_ADDRESS, this.accountAddress);
 
-            const tokenContract = helper.getTokenContract(token);
+            console.log("allowance: ", allowance);
+            if (Number(allowance) && Number(allowance) === 0) {
+                await helper.approveToken(tokenAddress, UNISWAP_V2_ROUTER_ADDRESS, MaxInt256);
+            }
 
-            const path = [token, WETH];
-            const tokenDecimals = await tokenContract.decimals();
+            console.log("tokenAddress: ", tokenAddress);
+            const tokenContract = helper.getTokenContract(tokenAddress);
+
+            const path = [tokenAddress, WETH];
             const tokenBalance = await tokenContract.balanceOf(this.accountAddress);
 
-            const amount = tokenBalance * percentageSell / 100n;
+            const deadline = Math.floor(Date.now() / 1000) + 60 * 2;
 
-            const amountIn = parseUnits(amount.toString(), tokenDecimals);
+            const amountIn = tokenBalance * percentageSell / 100n;
             const amounts = await helper.amountOutMin(amountIn, path);
+
+            if (!amounts) return;
 
             const amountOutMin = amounts! * (100n - config.slippage) / 100n;
 
@@ -71,11 +82,12 @@ class Router extends Account {
             console.log("path: ", path);
             console.log("signer.address: ", this.accountAddress);
 
-            const transactionResponse = await this.uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens.staticCall(
+            const transactionResponse = await this.uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
                 amountIn,
                 amountOutMin,
                 path,
-                this.accountAddress
+                this.accountAddress,
+                deadline,
             );
 
             console.log(transactionResponse);

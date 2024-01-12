@@ -21,7 +21,4 @@ class DBOps {
     }
 }
 
-let a = new DBOps()
-a.saveTrade("0x123", BigInt(100), "0x123", "0x123")
-
 export const dpOps = new DBOps()

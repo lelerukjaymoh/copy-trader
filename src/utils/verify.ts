@@ -18,7 +18,7 @@ class VerifyInput {
             return items.trim().toLowerCase();
         })
 
-        if (inputParams.length < 4) {
+        if (inputParams.length < 2) {
             return { error: true, reason: "Invalid request format provided. Click /help to see the right format " }
         }
 

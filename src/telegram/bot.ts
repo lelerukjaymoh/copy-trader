@@ -4,24 +4,36 @@ import { exec } from "child_process"
 import { AUTHORIZED_USERS, UNISWAP_V2_ROUTER_ADDRESS, config } from "../utils/constants";
 import { verifyInput } from "../utils/verify";
 import { helper } from "../utils/helper";
-import { TGRequestInput, TGRequestInputError } from "../utils/types";
 import { MaxInt256 } from "ethers";
+import { Account } from "../utils/account";
 
 export class TGBot extends Messages {
     bot: Telegraf;
+    account: Account
 
     constructor() {
         super()
-        this.bot = new Telegraf(process.env.BOT_TOKEN!);
+        this.bot = new Telegraf(process.env.TG_BOT_TOKEN!);
 
+        this.account = new Account()
+
+        console.log("Bot token ", process.env.TG_BOT_TOKEN)
+    }
+
+    startBot = async () => {
         // Start the bot
-        this.bot.launch();
+        await this.bot.launch().catch((error: any) => {
+            console.log("Error starting bot ", error)
+        })
+
     }
 
     operate = async () => {
+
         try {
             // Reply when a user sends start to the bot
             this.bot.start((ctx: { reply: (arg0: string) => void; }) => {
+                console.log("Started bot")
                 ctx.reply(this.startMessage())
             })
 
@@ -65,7 +77,15 @@ export class TGBot extends Messages {
                         console.log("Input Data ", inputData)
 
                         if (inputData.action == "approve") {
-                            if (await helper.tokenAllowance(inputData.token, UNISWAP_V2_ROUTER_ADDRESS, user) > 0) {
+                            const allowance = await helper.tokenAllowance(inputData.token, UNISWAP_V2_ROUTER_ADDRESS, this.account.accountAddress)
+
+                            if (!allowance.success) {
+                                return ctx.replyWithHTML(this.errorFetchingTokenAllowance(inputData.token, allowance.data))
+                            }
+
+                            const tokenAllowance = allowance.data
+
+                            if (tokenAllowance > 0) {
                                 return ctx.replyWithHTML(this.tokenAlreadyApproved(inputData.token))
                             }
 
@@ -73,10 +93,12 @@ export class TGBot extends Messages {
 
                             ctx.reply("Transaction successfully submitted. Waiting for confirmation")
 
+                            console.log("Tx Response ", txResponse)
+
                             const tx = await txResponse.wait()
 
                             if (tx.status == 1) {
-                                await ctx.replyWithHTML(this.successfulApproval(inputData.token, tx.transactionHash), { disable_web_page_preview: true })
+                                await ctx.replyWithHTML(this.successfulApproval(inputData.token, tx.hash), { disable_web_page_preview: true })
                             } else {
                                 await ctx.replyWithHTML(this.unSuccessfulApproval(inputData.token), { disable_web_page_preview: true })
                             }
@@ -130,3 +152,4 @@ export class TGBot extends Messages {
 }
 
 export const telegramBot = new TGBot()
+telegramBot.startBot()

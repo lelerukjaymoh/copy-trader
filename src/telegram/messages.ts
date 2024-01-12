@@ -3,27 +3,27 @@ export class Messages {
     }
 
     startMessage = () => {
-        let message = "Welcome To Equator's Multi-chain Swap Bot"
+        let message = "Welcome To Copy Bot"
 
         return message
     }
 
     helpMessage = () => {
-        let message = "Equator Swap Bot User Guide"
+        let message = "Copy Bot User Guide"
         message += "\n\n\nBuy"
-        message += "\nchain, action, token address, amount, slippage percentage"
+        message += "\naction, token address, amount, slippage percentage"
         message += "\n\nExample Buy"
-        message += "\neth, buy, 0x889b294a7d8a1ef65aabbfa95e47b9c3c202f55d, 0.000001, 5"
+        message += "\nbuy, 0x889b294a7d8a1ef65aabbfa95e47b9c3c202f55d, 0.000001, 5"
 
         message += "\n\n\nSell"
-        message += "\nchain, action, token address, percentage to sell (100 to sell the whole amount), slippage percentage"
+        message += "\naction, token address, percentage to sell (100 to sell the whole amount), slippage percentage"
         message += "\n\nExample Sell"
-        message += "\neth, sell, 0x889b294a7d8a1ef65aabbfa95e47b9c3c202f55d, 100, 5"
+        message += "\nsell, 0x889b294a7d8a1ef65aabbfa95e47b9c3c202f55d, 100, 5"
 
         message += "\n\n\nApprove"
-        message += "\napprove, chain, token address"
+        message += "\napprove, token address"
         message += "\n\nExample Approve"
-        message += "\napprove, eth, 0x889b294a7d8a1ef65aabbfa95e47b9c3c202f55d"
+        message += "\napprove, 0x889b294a7d8a1ef65aabbfa95e47b9c3c202f55d"
 
         return message
     }
@@ -44,7 +44,7 @@ export class Messages {
     }
 
     successfulTransactionMessage = (token: string, txHash: string) => {
-        const explorer = "https://etherscan.io"
+        const explorer = "https://goerli.etherscan.io/"
 
         let message = "Successful Transaction"
         message += "\n\nToken"
@@ -58,7 +58,7 @@ export class Messages {
     }
 
     unSuccessfulTransactionMessage = (token: string, txHash: string) => {
-        const explorer = "https://etherscan.io"
+        const explorer = "https://goerli.etherscan.io/"
 
         let message = "Failed Transaction"
         message += "\n\nToken"
@@ -70,7 +70,7 @@ export class Messages {
     }
 
     unSuccessfulTransactionBroadcastMessage = (token: string, reason: string) => {
-        const explorer = "https://etherscan.io"
+        const explorer = "https://goerli.etherscan.io/"
 
         let message = "Failed Transaction"
         message += "\n\nToken"
@@ -82,7 +82,7 @@ export class Messages {
     }
 
     successfulApproval = (token: string, txHash: string,) => {
-        const explorer = "https://etherscan.io"
+        const explorer = "https://goerli.etherscan.io/"
 
         let message = "Approval Successful"
         message += "\n\nToken"
@@ -103,7 +103,7 @@ export class Messages {
     }
 
     zeroBalance = (token: string, wallet: string) => {
-        const explorer = "https://etherscan.io"
+        const explorer = "https://goerli.etherscan.io/"
 
         let message = "Zero Token Balance"
         message += "\n\n Wallet does not hold this token"
@@ -118,7 +118,7 @@ export class Messages {
         error = JSON.parse(error)
 
         let message = `Failed to broadcast a ${txType}`
-        message += `\n\n\ Token: https://etherscan.io/address/${token}`
+        message += `\n\n\ Token: https://goerli.etherscan.io//address/${token}`
         message += `\n\n Error reason`
         message += `\n ${error.code} : ${error.reason}`
         message += `\n\n\n Transaction Data`
@@ -169,9 +169,9 @@ export class Messages {
     successfulCopyApproval = (token: string, txHash: string,) => {
         let message = "Approval Successful"
         message += "\n\nToken"
-        message += `\n <a href="https://etherscan.io/token/${token}">${token}</a>`
+        message += `\n <a href="https://goerli.etherscan.io//token/${token}">${token}</a>`
         message += "\n\nTransaction"
-        message += `\n<a href="https://etherscan.io/tx/${txHash}">${txHash}</a>`
+        message += `\n<a href="https://goerli.etherscan.io//tx/${txHash}">${txHash}</a>`
 
         return message
     }
@@ -180,11 +180,11 @@ export class Messages {
 
         let message = `Successfully Copied ${action} Transaction`
         message += "\n\nTarget"
-        message += `\n<a href="https://etherscan.io/address/${target}">${target}</a>`
+        message += `\n<a href="https://goerli.etherscan.io//address/${target}">${target}</a>`
         message += "\n\nToken"
-        message += `\n<a href="https://etherscan.io/token/${token}">${token}</a>`
+        message += `\n<a href="https://goerli.etherscan.io//token/${token}">${token}</a>`
         message += "\n\n Transaction"
-        message += `\n<a href="https://etherscan.io/tx/${txHash}">${txHash}</a>`
+        message += `\n<a href="https://goerli.etherscan.io//tx/${txHash}">${txHash}</a>`
 
         console.log("\n\n Message ", message)
 
@@ -202,13 +202,23 @@ export class Messages {
     targetBuyingWithUnsupportedToken = (target: string, token: string, txHash: string) => {
         let message = "Target buying with unsupported token"
         message += "\n\nTarget"
-        message += `\n<a href="https://etherscan.io/address/${target}">${target}</a>`
+        message += `\n<a href="https://goerli.etherscan.io//address/${target}">${target}</a>`
         message += "\n\nToken"
-        message += `\n<a href="https://etherscan.io/token/${token}">${token}</a>`
+        message += `\n<a href="https://goerli.etherscan.io//token/${token}">${token}</a>`
         message += "\n\n Transaction"
-        message += `\n<a href="https://etherscan.io/tx/${txHash}">${txHash}</a>`
+        message += `\n<a href="https://goerli.etherscan.io//tx/${txHash}">${txHash}</a>`
 
         console.log("\n\n Message ", message)
+
+        return message
+    }
+
+    errorFetchingTokenAllowance = (token: string, reason: any) => {
+        let message = "Error fetching token allowance"
+        message += "\n\nToken"
+        message += `\n${token}`
+        message += "\n\nReason"
+        message += `\n<pre>${reason}</pre>`
 
         return message
     }
