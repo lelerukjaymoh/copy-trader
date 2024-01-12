@@ -17,6 +17,6 @@
   },
   "scripts": {
     "dev": "ts-node-dev -r dotenv/config index.ts",
-    "test": "ts-node-dev -r dotenv/config src/db/operations.ts"
+    "test": "ts-node -r dotenv/config src/db/operations.ts"
   }
 }

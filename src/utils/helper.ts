@@ -37,9 +37,12 @@ class Helper extends Account {
 
     tokenAllowance = async (tokenAddress: string, spender: string, owner: string) => {
         try {
-            return await this.getTokenContract(tokenAddress).allowance(owner, spender)
+            const allowance = await this.getTokenContract(tokenAddress).allowance(owner, spender)
+            return { success: true, data: allowance }
         } catch (error) {
             console.log("Error getting eth token allowance ", error)
+            return { success: false, data: error }
+
         }
     }
 
