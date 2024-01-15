@@ -16,7 +16,6 @@
     "typescript": "^5.3.2"
   },
   "scripts": {
-    "dev": "ts-node-dev -r dotenv/config index.ts",
-    "test": "ts-node -r dotenv/config src/db/operations.ts"
+    "dev": "ts-node-dev -r dotenv/config index.ts"
   }
 }

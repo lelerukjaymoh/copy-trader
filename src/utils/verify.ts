@@ -1,3 +1,4 @@
+import { parseEther } from "ethers";
 import { TGRequestInput, TGRequestInputError } from "./types";
 
 class VerifyInput {
@@ -23,19 +24,19 @@ class VerifyInput {
         }
 
         if (inputParams[0] != "buy" && inputParams[0] != "sell" && inputParams[0] != "approve") {
-            return { error: true, reason: "Invalid action provided in the request. Action can either be buy or sell. Click /help to see the right format " }
+            return { error: true, reason: "Invalid action provided in the request. Action can either be BUY, SELL or APPROVE. \n\nClick /help to see the right format " }
         }
 
-        if (!inputParams[1].match(/^(0x)?[0-9a-fA-F]{40}$/)) {
-            return { error: true, reason: "Invalid token provided in the request. Token address example 0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2. Click /help to see the right format " }
+        if (!this.isAddressLike(inputParams[1])) {
+            return { error: true, reason: `Invalid token provided in the request. \n\nHere is an example of a token address <code>0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2</code>. \n\nClick /help to see the right ${inputParams[0].toUpperCase()} command format` }
         }
 
-        if (typeof parseInt(inputParams[2]) != "number") {
+        if (!this.isNumeric(inputParams[2])) {
             return { error: true, reason: "Invalid amount provided in the request. Amount must be a number. Click /help to see the right format " }
         }
 
-        if (typeof parseInt(inputParams[3]) != "number") {
-            return { error: true, reason: `Invalid slippage provided (<pre>${inputParams[3]}</pre>) in the request. Amount must be a number. Click /help to see the right format ` }
+        if (!this.isNumeric(inputParams[3])) {
+            return { error: true, reason: `Invalid slippage provided in the request. Amount must be a number. Click /help to see the right format ` }
         }
 
         // check if set slippage is greater than 70. This should not be allowed
@@ -43,16 +44,33 @@ class VerifyInput {
             return { error: true, reason: `Slippage of more than 70% is not allowed (<pre>${inputParams[3]}</pre>).` }
         }
 
+        if (parseInt(inputParams[3]) < 1) {
+            return { error: true, reason: `Slippage less than 1% is not allowed (<pre>${inputParams[3]}</pre>).` }
+        }
 
         const data: TGRequestInput = {
             action: inputParams[0],
             token: inputParams[1],
             amount: inputParams[2],
-            slippage: inputParams[3]
+            slippage: BigInt(inputParams[3])
         }
+
+        console.log("Data ", data)
 
         return data
     }
+
+    isNumeric(input: string) {
+        console.log("Input ", input)
+        const regex = /^[0-9]+(\.[0-9]+)?$/;
+        return regex.test(input);
+    }
+
+    isAddressLike(input: string) {
+        const regex = /^(0x)?[0-9a-fA-F]{40}$/;
+        return regex.test(input);
+    }
+
 }
 
 export const verifyInput = new VerifyInput();

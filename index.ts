@@ -5,6 +5,7 @@ import { Messages } from "./src/telegram/messages";
 import { dpOps } from "./src/db/operations";
 import { MaxInt256, WebSocketProvider, parseEther } from "ethers";
 import { helper } from "./src/utils/helper";
+import { config } from "./src/utils/constants";
 
 const main = async () => {
     const messages = new Messages()
@@ -62,13 +63,13 @@ const main = async () => {
         //         // Return early if buy amount or token where not retrieved
         //         if (!buyAmount || !tokenOut) return;
 
-        //         const txnReceipt = await router.buy(tokenOut, buyAmount);
+        //         const txnReceipt = await router.buy(tokenOut, buyAmount, config.slippage);
 
 
         //         if (txnReceipt && txnReceipt.status! == 1) {
         //             console.log("Transaction Receipt: ", txnReceipt, tokenOut);
 
-        //             await dpOps.saveTrade(tokenOut, buyAmount, txnReceipt.hash, from)
+        //             await dpOps.saveTrade(tokenOut, buyAmount, txnReceipt.hash, from, "copy")
 
         //             await helper.approveToken(tokenOut, UNISWAP_V2_ROUTER_ADDRESS, MaxInt256)
         //                 .catch(error => console.log("Error approving token: ", error))
@@ -92,7 +93,7 @@ const main = async () => {
         //         console.log("tokenIn: ", tokenIn);
         //         console.log("tokenOut: ", tokenOut);
 
-        //         const txnReceipt = await router.sell(tokenIn, 100n);
+        //         const txnReceipt = await router.sell(tokenIn, 100n, config.slippage);
 
         //         if (txnReceipt && txnReceipt.status! == 1) {
         //             console.log("Transaction Receipt: ", txnReceipt);

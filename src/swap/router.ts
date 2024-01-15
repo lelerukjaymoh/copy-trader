@@ -17,7 +17,7 @@ class Router extends Account {
         this.messages = new Messages();
     }
 
-    buy = async (tokenAddress: string, buyAmount: bigint) => {
+    buy = async (tokenAddress: string, buyAmount: bigint, slippage: bigint) => {
         try {
             // Get all required data before swap 
             const path = [WETH, tokenAddress];
@@ -32,7 +32,7 @@ class Router extends Account {
 
             if (!amounts) return;
 
-            const amountOutMin = amounts! * (100n - config.slippage) / 100n;
+            const amountOutMin = amounts! * (100n - slippage) / 100n;
 
             console.log("Amount out min ", amountOutMin);
             const transactionResponse: ethers.TransactionResponse = await this.uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens(
@@ -52,19 +52,13 @@ class Router extends Account {
         }
     }
 
-    sell = async (tokenAddress: string, percentageSell: bigint) => {
+    sell = async (tokenAddress: string, percentageSell: bigint, slippage: bigint) => {
         try {
-            // Check allowance
-            const allowance = await helper.tokenAllowance(tokenAddress, UNISWAP_V2_ROUTER_ADDRESS, this.accountAddress);
-
-            console.log("allowance: ", allowance);
-            if (Number(allowance) && Number(allowance) === 0) {
-                await helper.approveToken(tokenAddress, UNISWAP_V2_ROUTER_ADDRESS, MaxInt256);
-            }
-
             console.log("tokenAddress: ", tokenAddress);
-            const tokenContract = helper.getTokenContract(tokenAddress);
 
+            await helper.approveToken(tokenAddress, UNISWAP_V2_ROUTER_ADDRESS, MaxInt256);
+
+            const tokenContract = helper.getTokenContract(tokenAddress);
             const path = [tokenAddress, WETH];
             const tokenBalance = await tokenContract.balanceOf(this.accountAddress);
 
@@ -75,7 +69,7 @@ class Router extends Account {
 
             if (!amounts) return;
 
-            const amountOutMin = amounts! * (100n - config.slippage) / 100n;
+            const amountOutMin = amounts! * (100n - slippage) / 100n;
 
             console.log("amountIn: ", amountIn.toString());
             console.log("amountOutMin: ", amountOutMin);

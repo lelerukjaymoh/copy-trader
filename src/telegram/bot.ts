@@ -1,11 +1,13 @@
 import { Telegraf } from "telegraf";
 import { Messages } from "./messages";
 import { exec } from "child_process"
-import { AUTHORIZED_USERS, UNISWAP_V2_ROUTER_ADDRESS, config } from "../utils/constants";
+import { AUTHORIZED_USERS, TG_ID, UNISWAP_V2_ROUTER_ADDRESS, config } from "../utils/constants";
 import { verifyInput } from "../utils/verify";
 import { helper } from "../utils/helper";
-import { MaxInt256 } from "ethers";
+import { MaxInt256, ZeroAddress, parseEther } from "ethers";
 import { Account } from "../utils/account";
+import { router } from "../swap/router";
+import { dpOps } from "../db/operations";
 
 export class TGBot extends Messages {
     bot: Telegraf;
@@ -16,8 +18,6 @@ export class TGBot extends Messages {
         this.bot = new Telegraf(process.env.TG_BOT_TOKEN!);
 
         this.account = new Account()
-
-        console.log("Bot token ", process.env.TG_BOT_TOKEN)
     }
 
     startBot = async () => {
@@ -32,26 +32,26 @@ export class TGBot extends Messages {
 
         try {
             // Reply when a user sends start to the bot
-            this.bot.start((ctx: { reply: (arg0: string) => void; }) => {
+            this.bot.start((ctx: { replyWithHTML: (arg0: string) => void; }) => {
                 console.log("Started bot")
-                ctx.reply(this.startMessage())
+                ctx.replyWithHTML(this.startMessage())
             })
 
-            this.bot.help((ctx: { reply: (arg0: string) => void; }) => {
-                ctx.reply(this.helpMessage())
+            this.bot.help((ctx: { replyWithHTML: (arg0: string) => void; }) => {
+                ctx.replyWithHTML(this.helpMessage())
             })
 
-            this.bot.command("restart", (ctx: { reply: (arg0: string) => void; }) => {
+            this.bot.command("restart", (ctx: { replyWithHTML: (arg0: string) => void; }) => {
                 console.log("Restarting bot")
 
                 exec("pm2 restart copy", (error, stdout, stderr) => {
                     if (error) {
                         console.log(`error: ${error.message}`);
-                        return ctx.reply(error.message);
+                        return ctx.replyWithHTML(error.message);
                     }
                     if (stderr) {
                         console.log(`stderr: ${stderr}`);
-                        return ctx.reply(stderr);
+                        return ctx.replyWithHTML(stderr);
                     }
                     console.log(`stdout: ${stdout}`);
                 });
@@ -60,7 +60,9 @@ export class TGBot extends Messages {
             this.bot.on("text", async (ctx) => {
                 try {
 
-                    ctx.reply("Processing. In case the bot hangs, click /restart to restart the bot")
+                    console.log("Processing command ", ctx.message?.text)
+
+                    ctx.replyWithHTML("Processing...")
 
                     let user = ctx.message.from.id.toString()
 
@@ -91,7 +93,7 @@ export class TGBot extends Messages {
 
                             const txResponse = await helper.approveToken(inputData.token, UNISWAP_V2_ROUTER_ADDRESS, MaxInt256)
 
-                            ctx.reply("Transaction successfully submitted. Waiting for confirmation")
+                            ctx.replyWithHTML("Transaction successfully submitted. Waiting for confirmation")
 
                             console.log("Tx Response ", txResponse)
 
@@ -103,26 +105,37 @@ export class TGBot extends Messages {
                                 await ctx.replyWithHTML(this.unSuccessfulApproval(inputData.token), { disable_web_page_preview: true })
                             }
 
+                        } else if (inputData.action == "buy") {
+                            const amountIn = parseEther(inputData.amount)
+
+                            const txnReceipt = await router.buy(inputData.token, amountIn, inputData.slippage)
+
+                            if (txnReceipt && txnReceipt.status! == 1) {
+                                console.log("Transaction Receipt: ", txnReceipt, inputData.token);
+
+                                await dpOps.saveTrade(inputData.token, amountIn, txnReceipt.hash, ZeroAddress, "manual")
+
+                                await helper.approveToken(inputData.token, UNISWAP_V2_ROUTER_ADDRESS, MaxInt256)
+                                    .catch(error => console.log("Error approving token: ", error))
+
+                                await telegramBot.sendNotification(
+                                    TG_ID,
+                                    this.successfulTransactionMessage("BUY", inputData.token, txnReceipt.hash)
+                                ).catch(error => console.log("Error sending notification: ", error))
+                            }
+                        } else if (inputData.action == "sell") {
+                            // When selling the inputData.amount is the percentage of tokens that should be sold. 100% means all tokens should be sold
+                            const txnReceipt = await router.sell(inputData.token, inputData.amount, inputData.slippage)
+
+                            if (txnReceipt && txnReceipt.status! == 1) {
+                                console.log("Transaction Receipt: ", txnReceipt, inputData.token);
+
+                                await telegramBot.sendNotification(
+                                    TG_ID,
+                                    this.successfulTransactionMessage("SELL", inputData.token, txnReceipt.hash)
+                                ).catch(error => console.log("Error sending notification: ", error))
+                            }
                         }
-                        //  else if (inputData.action == "buy") {
-
-                        //     await bu
-
-                        //     console.log("\nInput Data ", inputData)
-
-                        //     // Process the data to get all command parameters [chain, token, action, amount, ]
-                        //     const data = await this.check.checkInputData(inputData)
-
-                        //     console.log("\n\nChecked Data ", data)
-
-                        //     if (data.error) {
-                        //         console.log("Error processing user input ", data.reason)
-                        //         // Send notification that there was an error processing the command input
-                        //         await ctx.replyWithHTML(this.inputErrorMessage(data.reason))
-                        //     } else {
-                        //         this.swapper.swap(data, ctx)
-                        //     }
-                        // }
 
                     } else {
                         ctx.replyWithHTML(this.unAuthorizedAccessMessage())

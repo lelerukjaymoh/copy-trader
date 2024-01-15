@@ -2,13 +2,14 @@ import "./connect"
 import { Trade } from "./models"
 
 class DBOps {
-    saveTrade = async (token: string, amount: BigInt, txHash: string, target: string) => {
+    saveTrade = async (token: string, amount: BigInt, txHash: string, target: string, tradeType: string) => {
         try {
             const trade = new Trade({
                 token,
                 amount,
                 txHash,
-                target
+                target,
+                tradeType
             })
 
             await trade.save()

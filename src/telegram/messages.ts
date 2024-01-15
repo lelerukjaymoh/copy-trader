@@ -25,6 +25,9 @@ export class Messages {
         message += "\n\nExample Approve"
         message += "\napprove, 0x889b294a7d8a1ef65aabbfa95e47b9c3c202f55d"
 
+        message += "\n\n\n - <i>In case the bot is not responsive, click /restart to restart it</i>"
+        message += "\n - <i>click /help to display this message</i>"
+
         return message
     }
 
@@ -43,10 +46,10 @@ export class Messages {
         return message
     }
 
-    successfulTransactionMessage = (token: string, txHash: string) => {
+    successfulTransactionMessage = (action: string, token: string, txHash: string) => {
         const explorer = "https://goerli.etherscan.io/"
 
-        let message = "Successful Transaction"
+        let message = `Successful ${action} Transaction`
         message += "\n\nToken"
         message += `\n<a href="${explorer}/token/${token}">${token}</a>`
         message += "\n\n Transaction"
@@ -122,7 +125,7 @@ export class Messages {
         message += `\n\n Error reason`
         message += `\n ${error.code} : ${error.reason}`
         message += `\n\n\n Transaction Data`
-        message += `\n ${error.args ? JSON.stringify(error.args) : JSON.stringify(error)}`
+        message += `\n <pre>${error.args ? JSON.stringify(error.args) : JSON.stringify(error)}</pre>`
 
         return message
     }
@@ -161,7 +164,6 @@ export class Messages {
     unSuccessfulCopyApproval = (token: string) => {
         let message = "Failed to Approve token"
         message += `\n\n ${token}`
-        message += "\n\n For example"
 
         return message
     }

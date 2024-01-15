@@ -2,7 +2,7 @@ export interface TGRequestInput {
     action: string,
     token: string,
     amount?: string,
-    slippage?: string
+    slippage?: bigint
 }
 export interface TGRequestInputError {
     error: boolean,
@@ -14,4 +14,5 @@ export interface ITrade {
     amount: bigint,
     txHash: string,
     target: string,
+    tradeType: string
 }

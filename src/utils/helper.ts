@@ -64,12 +64,21 @@ class Helper extends Account {
         );
     }
 
+
+    // Checks if token is already approved before approving 
     approveToken = async (tokenAddress: string, spender: string, amount: bigint) => {
         try {
-            const tokenContract = this.getTokenContract(tokenAddress)
-            const tx = await tokenContract.approve(spender, amount)
+            // Check allowance
+            const allowance = await helper.tokenAllowance(tokenAddress, UNISWAP_V2_ROUTER_ADDRESS, this.accountAddress);
 
-            return tx
+            console.log("allowance: ", allowance);
+
+            if (Number(allowance) && Number(allowance) == 0) {
+                const tokenContract = this.getTokenContract(tokenAddress)
+                const tx = await tokenContract.approve(spender, amount)
+
+                return tx
+            }
         } catch (error) {
             console.log("Error approving token ", error)
         }
